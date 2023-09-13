@@ -17,13 +17,14 @@ def set_markup(number: int, max_number: int) -> InlineKeyboardMarkup:
 def characteristics_of_player(array: list, group_id: int) -> InlineKeyboardMarkup:
     characteristics_of_player_markup = InlineKeyboardBuilder()
     for index in range(0, len(array)):
-        characteristics_of_player_markup.button(text=f"{array[index]}",
-                                                callback_data=MessageCallbackFactory(
-                                                    action='send_message',
-                                                    value=index,
-                                                    group_id=group_id
-                                                )
-                                                )
+        characteristics_of_player_markup.button(
+            text=f"{array[index]}",
+            callback_data=MessageCallbackFactory(
+                action='send_message',
+                value=index,
+                group_id=group_id
+            )
+        )
     characteristics_of_player_markup.adjust(1)
     return characteristics_of_player_markup.as_markup()
 
@@ -38,7 +39,7 @@ def players_count() -> InlineKeyboardMarkup:
     for player in range(1, max_players):
         players_count_markup.button(text=f"{player}",
                                     callback_data=NumbersCallbackFactory(action="set_players", value=player))
-    players_count_markup.adjust(3)
+    players_count_markup.adjust(2)
     return players_count_markup.as_markup()
 
 

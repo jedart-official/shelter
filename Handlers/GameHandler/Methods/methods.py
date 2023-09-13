@@ -33,16 +33,19 @@ async def check_free_characteristics(callback: CallbackQuery, callback_data: Mes
     group_id: int = callback_data.group_id
     state: FSMContext = await get_group_context(chat_id=group_id)
     session: Session = await get_session(state=state)
-    if not await is_free_characteristic(state=state):
-        await send_characteristics_is_full_message(callback=callback)
-    elif await is_free_characteristic(state=state) == 'Next':
+    session.inc_opened_characteristic()
+    if await is_free_characteristic(state=state):
         await turn_of_player(callback=callback, callback_data=callback_data)
+    await is_incremented_player(state=state)
+
+
+async def is_incremented_player(state: FSMContext):
+    session: Session = await get_session(state=state)
+    if session.opened_characteristic == session.important_open:
         if session.inc_current_player():
             await player_turn_message(state=state)
         else:
             await voice_turn(state=state)
-    else:
-        await turn_of_player(callback=callback, callback_data=callback_data)
 
 
 async def voice_turn(state: FSMContext):
@@ -60,7 +63,7 @@ async def turn_of_player(callback: CallbackQuery, callback_data: MessageCallback
     player: Player = session.players[player_index]
     await send_information_message(callback_data=callback_data, state=state)
     session.remove_char_from_player(player=player_index, index_of_char=callback_data.value)
-    session.inc_opened_characteristic()
+
     await send_edit_keyboard_of_char(callback=callback, player=player, group_id=group_id)
 
 
@@ -77,6 +80,8 @@ async def find_kicked_player(state: FSMContext, message: Message):
         else:
             kicked_player_index += 1
     session.remove_player(key=kicked_player, index=kicked_player_index)
+    session.voiced_players = []
+    session.players_to_voiced = {}
     await send_kicked_message(player_nickname, state=state)
     if await is_finish(state=state):
         await send_finished_message(state=state)

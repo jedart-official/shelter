@@ -29,12 +29,7 @@ async def is_free_characteristic(state: FSMContext) -> bool | str:
     session: Session = await get_session(state=state)
     opened: int = session.opened_characteristic
     important: int = session.important_open
-    if opened + 1 == important:
-        return 'Next'
-    if opened < important:
-        return True
-    else:
-        return False
+    return opened <= important
 
 
 async def is_voice_turn(state: FSMContext) -> bool:

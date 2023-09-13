@@ -1,3 +1,4 @@
+from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from Data.static_messages import *
@@ -8,12 +9,14 @@ from Keyboards.keyboards import edited_characteristics_of_player, \
     players_nickname
 from Models.Session import Session
 from config import bot
+from aiogram.utils.markdown import link, hlink
 
 
 async def send_line_is_taken(callback: CallbackQuery) -> None:
-    await bot.send_message(chat_id=callback.from_user.id,
-                           text=is_not_turn_msg,
-                           parse_mode='MARKDOWN')
+    await callback.answer(
+        text=is_not_turn_msg,
+        show_alert=True,
+    )
 
 
 async def send_characteristics_is_full_message(callback: CallbackQuery) -> None:
@@ -27,9 +30,14 @@ async def send_information_message(callback_data: MessageCallbackFactory, state:
     session: Session = context['session']
     player_index = session.current_player
     player: Player = session.players[player_index]
-    await bot.send_message(chat_id=session.id,
-                           text=f"*ИНФОРМАЦИЯ ОБ* |  {player.name.upper()}\n{player.characteristics[callback_data.value]}",
-                           parse_mode='MARKDOWN')
+    str_link = f'https://t.me/{player.nickname}'
+    player_name_link = link(player.name.upper(), str_link)
+    await bot.send_message(
+        chat_id=session.id,
+        text=f"*ИНФОРМАЦИЯ ОБ* |  {player_name_link} | *{player.job}* \n{player.characteristics[callback_data.value]}".upper(),
+        parse_mode='MARKDOWN',
+        disable_web_page_preview=True
+    )
 
 
 async def send_edit_keyboard_of_char(callback: CallbackQuery, player: Player, group_id: int) -> None:
@@ -53,17 +61,23 @@ async def send_turn_message(state: FSMContext) -> None:
     session: Session = session_data['session']
     await bot.send_message(
         chat_id=session.id,
-        text=f'\n\n❗️ Начинается {session.current_turn} круг игры.❗'
-             f'\nКаждый из вас раскрывает {session.important_open} свои характеристики '.upper(),
+        text=f'❗\t Начинается {session.current_turn} круг игры. \t ❗'.upper(),
     )
 
 
 async def send_player_turn_message(state: FSMContext) -> None:
     session: Session = await get_session(state=state)
     current_player: Player = session.players[session.current_player]
+    str_link = f'https://t.me/{current_player.nickname}'
+    player_name_link = link(current_player.name, str_link)
     await bot.send_message(
         chat_id=session.id,
-        text=f'{empty_msg}\n\n {current_player.name}, раскройте {session.important_open} свои характеристики \n\n {empty_msg}'.upper(),
+        text=f'{empty_msg}\n'
+             f'_Показывает характеристики_ \t|\t  {player_name_link} \n'
+             f'_Количество_ \t|\t *{session.important_open}* \n '
+             f'{empty_msg}'.upper(),
+        parse_mode='markdown',
+        disable_web_page_preview=1
     )
 
 
@@ -84,6 +98,12 @@ async def send_finished_message(state: FSMContext) -> None:
     session: Session = await get_session(state=state)
     message: str = ''
     for player in session.players:
-        message += f'\n {player.name}'
+        str_link = f'https://t.me/{player.nickname}'
+        player_name_link = link(player.name, str_link)
+        message += f'*{player.job.upper()}* \t|\t {player_name_link} \n'
 
-    await bot.send_message(text=f"{congr_with_win_msg} {message} ", chat_id=session.id)
+    await bot.send_message(
+        text=f"*Игра завершена!* \n\n{congr_with_win_msg}\n{message} ",
+        chat_id=session.id,
+        parse_mode='MARKDOWN',
+        disable_web_page_preview=True)

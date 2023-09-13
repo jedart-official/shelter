@@ -5,13 +5,15 @@ from States.main import get_session
 from Models.Player import Player
 from Handlers.GameHandler.Conditions.conditions import is_session
 from Handlers.GameHandler.Methods.methods import turn
-from Handlers.PrepareHandler.Messages.messages import send_start_game_message, send_run_game_message
+from Handlers.PrepareHandler.Messages.messages import send_start_game_message, send_history_message
 from Models.Session import Session
 
 
 def create_player(callback: CallbackQuery) -> Player:
     return Player(player_id=callback.from_user.id,
-                  player_name=callback.from_user.first_name)
+                  player_name=callback.from_user.first_name,
+                  player_nickname=callback.from_user.username
+                  )
 
 
 async def prepare_game(state: FSMContext) -> None:
@@ -26,5 +28,5 @@ async def prepare_game(state: FSMContext) -> None:
 
 
 async def run_game_message(callback: CallbackQuery, state: FSMContext) -> None:
-    await send_run_game_message(callback=callback)
+    await send_history_message(callback=callback, state=state)
     await turn(state=state)
