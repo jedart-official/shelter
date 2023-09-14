@@ -60,3 +60,10 @@ def create_characteristic_names_array():
     characteristic_names.append("Знание")
     characteristic_names.append("Багаж")
     return characteristic_names
+
+
+async def is_session(state: FSMContext | None) -> bool:
+    if type(state) is None:
+        return False
+    session_data = await state.get_data()
+    return 'session' in session_data

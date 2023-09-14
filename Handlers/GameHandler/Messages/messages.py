@@ -1,15 +1,12 @@
-from aiogram import types
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, BufferedInputFile
 from Data.static_messages import *
 from Factories.MessageCallbackFactory import MessageCallbackFactory
-from States.main import get_session
 from Models.Player import Player
 from Keyboards.keyboards import edited_characteristics_of_player, \
     players_nickname
 from Models.Session import Session
 from config import bot
-from aiogram.utils.markdown import link, hlink
+from aiogram.utils.markdown import link
 
 
 async def send_line_is_taken(callback: CallbackQuery) -> None:
@@ -19,22 +16,15 @@ async def send_line_is_taken(callback: CallbackQuery) -> None:
     )
 
 
-async def send_characteristics_is_full_message(callback: CallbackQuery) -> None:
-    await bot.send_message(chat_id=callback.from_user.id,
-                           text=enough_chars,
-                           parse_mode='MARKDOWN')
-
-
-async def send_information_message(callback_data: MessageCallbackFactory, state: FSMContext) -> None:
-    context = await state.get_data()
-    session: Session = context['session']
+async def send_information_message(callback_data: MessageCallbackFactory, session: Session) -> None:
     player_index = session.current_player
     player: Player = session.players[player_index]
     str_link = f'https://t.me/{player.nickname}'
     player_name_link = link(player.name.upper(), str_link)
     await bot.send_message(
         chat_id=session.id,
-        text=f"*ИНФОРМАЦИЯ ОБ* |  {player_name_link} | *{player.job}* \n{player.characteristics[callback_data.value]}".upper(),
+        text=f"*ИНФОРМАЦИЯ ОБ* |  {player_name_link} | *{player.job}* \n"
+             f"{player.characteristics[callback_data.value]}".upper(),
         parse_mode='MARKDOWN',
         disable_web_page_preview=True
     )
@@ -42,31 +32,37 @@ async def send_information_message(callback_data: MessageCallbackFactory, state:
 
 async def send_edit_keyboard_of_char(callback: CallbackQuery, player: Player, group_id: int) -> None:
     current_player_chars: list = player.characteristic_names
-    await bot.edit_message_reply_markup(chat_id=callback.from_user.id,
-                                        message_id=callback.message.message_id,
-                                        reply_markup=edited_characteristics_of_player(
-                                            current_player_chars, group_id=group_id))
+    await bot.edit_message_reply_markup(
+        chat_id=callback.from_user.id,
+        message_id=callback.message.message_id,
+        reply_markup=edited_characteristics_of_player(
+            current_player_chars, group_id=group_id)
+    )
 
 
-async def send_empty_message(state: FSMContext):
-    session: Session = await get_session(state=state)
+async def send_empty_message(chat_id):
     await bot.send_message(
-        chat_id=session.id,
+        chat_id=chat_id,
         text=f"{empty_msg}\n\n",
     )
 
 
-async def send_turn_message(state: FSMContext) -> None:
-    session_data: dict[any, any] = await state.get_data()
-    session: Session = session_data['session']
+async def send_turn_message(chat_id: int, current_turn: int) -> None:
     await bot.send_message(
-        chat_id=session.id,
-        text=f'❗\t Начинается {session.current_turn} круг игры. \t ❗'.upper(),
+        chat_id=chat_id,
+        text=f'❗\t Начинается {current_turn} круг игры. \t ❗'.upper(),
     )
 
 
-async def send_player_turn_message(state: FSMContext) -> None:
-    session: Session = await get_session(state=state)
+async def send_to_player_turn_message(current_player: Player):
+    await bot.send_message(
+        chat_id=current_player.id,
+        text=f'{current_player.name}, время раскрыть характеристики',
+        parse_mode='markdown',
+    )
+
+
+async def send_player_turn_message(session: Session) -> None:
     current_player: Player = session.players[session.current_player]
     str_link = f'https://t.me/{current_player.nickname}'
     player_name_link = link(current_player.name, str_link)
@@ -81,29 +77,55 @@ async def send_player_turn_message(state: FSMContext) -> None:
     )
 
 
-async def send_start_meeting_message(state: FSMContext) -> None:
-    session: Session = await get_session(state=state)
-    await send_empty_message(state=state)
-    await bot.send_message(text=start_voice_msg,
-                           chat_id=session.id,
-                           reply_markup=players_nickname(session.players))
-
-
-async def send_kicked_message(player_name: str, state: FSMContext) -> None:
-    session: Session = await get_session(state=state)
-    await bot.send_message(text=f"{voiced_to_msg} {player_name} ", chat_id=session.id)
-
-
-async def send_finished_message(state: FSMContext) -> None:
-    session: Session = await get_session(state=state)
+async def send_edit_meeting_message(session: Session, message_id: int) -> None:
+    voiced_players: list[Player] = list()
+    for player in session.voiced_players:
+        voiced_players.append(session.players_dict[player])
     message: str = ''
-    for player in session.players:
+    for player in voiced_players:
+        message += f'_{player.job}_\t|\t *{player.name}*\n'.upper()
+    await bot.edit_message_text(
+        text=f'{start_voice_msg}:\n\n'
+             f'Проголосовавшие:\n'
+             f'{message}',
+        chat_id=session.id,
+        message_id=message_id,
+        reply_markup=players_nickname(session.players),
+        parse_mode="markdown"
+    )
+
+
+async def send_start_meeting_message(session: Session) -> None:
+    await send_empty_message(chat_id=session.id)
+    await bot.send_message(
+        text=start_voice_msg,
+        chat_id=session.id,
+        reply_markup=players_nickname(session.players),
+        parse_mode="markdown"
+    )
+
+
+async def send_kicked_message(player_name: str, chat_id: int) -> None:
+    with open('Data/Images/bunker_dead.png', 'rb') as photo:
+        await bot.send_photo(
+            photo=BufferedInputFile(
+                photo.read(),
+                filename='bunker_dead.png'
+            ),
+            caption=f"{voiced_to_msg} {player_name} ",
+            chat_id=chat_id
+        )
+
+
+async def send_finished_message(chat_id: int, players: list[Player]) -> None:
+    message: str = ''
+    for player in players:
         str_link = f'https://t.me/{player.nickname}'
         player_name_link = link(player.name, str_link)
         message += f'*{player.job.upper()}* \t|\t {player_name_link} \n'
 
     await bot.send_message(
         text=f"*Игра завершена!* \n\n{congr_with_win_msg}\n{message} ",
-        chat_id=session.id,
+        chat_id=chat_id,
         parse_mode='MARKDOWN',
         disable_web_page_preview=True)

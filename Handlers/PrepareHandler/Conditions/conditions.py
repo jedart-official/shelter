@@ -2,7 +2,7 @@ from aiogram.types import CallbackQuery
 from Models import Player
 
 
-def is_unreg_player(callback: CallbackQuery, all_players: dict[int, Player]) -> bool:
+def is_unregistered_player(callback: CallbackQuery, all_players: dict[int, Player]) -> bool:
     return callback.from_user.id not in all_players
 
 

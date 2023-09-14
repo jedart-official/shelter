@@ -1,3 +1,9 @@
+gifs: list[str] = [
+    'Data/Images/base_photo.gif',
+    'Data/Images/base_photo_1.gif',
+    'Data/Images/base_photo_3.gif',
+]
+
 gender: list = [
     'Мужчина',
     'Женщина',

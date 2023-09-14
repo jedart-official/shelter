@@ -1,10 +1,11 @@
 from aiogram.types import Message
 from States.main import update_session
 from Models.Session import Session
-from Handlers.GameHandler.Conditions.conditions import is_session
 from Handlers.ProcessHandler.Messages.messages import send_session_is_taken_message, send_select_players_message, \
     send_end_game_message
 from aiogram.fsm.context import FSMContext
+
+from Utils.helpers import get_group_context, is_session
 
 
 async def create_session(message: Message, state: FSMContext) -> None:
@@ -16,6 +17,7 @@ async def create_session(message: Message, state: FSMContext) -> None:
         await send_select_players_message(message=message)
 
 
-async def clear_session(message: Message, state: FSMContext) -> None:
+async def clear_session(message: Message) -> None:
+    state: FSMContext = await get_group_context(message.chat.id)
     await state.clear()
     await send_end_game_message(message=message)

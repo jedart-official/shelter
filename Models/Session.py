@@ -9,6 +9,7 @@ class Session:
         self.id = session_id
         self.current_turn: int = 0
         self.players: list[Player] = list()
+        self.keyboards: list[int] = list()
         self.players_dict: dict[int, Player] = dict()
         self.max_players: int = 0
         self.current_player: int = 0
@@ -17,9 +18,6 @@ class Session:
         self.voiced_players: list[int] = list()
         self.players_to_voiced: dict[int, int] = dict()
         self.shelter: Shelter | None = None
-
-    def __del__(self):
-        print('has delete')
 
     def add_voiced_players(self, player_id: int, from_player: int) -> bool:
         self.voiced_players.append(player_id)

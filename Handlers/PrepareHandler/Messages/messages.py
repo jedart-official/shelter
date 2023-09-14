@@ -1,38 +1,56 @@
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InputFile, BufferedInputFile
-from Data.static_messages import prepare_to_game_msg
+from random import randint
+
+from aiogram.types import CallbackQuery, BufferedInputFile, Message
+from aiogram.utils.markdown import link
+
+from Data.info import gifs
 from Models.Player import Player
 from Keyboards.keyboards import set_markup, characteristics_of_player
-from Models.Session import Session
 from Models.Shelter import Shelter
-from States.main import get_session
+from Utils.helpers import generate_characteristic
 from config import bot
 
 
-async def send_prepare_message(callback: CallbackQuery,
-                               all_players: dict[int, Player], max_players: int) -> None:
+async def send_prepare_message(
+        callback: CallbackQuery,
+        all_players: dict[int, Player],
+        max_players: int) -> None:
+    message = ''
+    for player in all_players.values():
+        player_link = link(player.name, f"https://t.me/{player.nickname}")
+        message += f"|\t{player_link}\n"
     await bot.edit_message_text(
         message_id=callback.message.message_id,
         chat_id=callback.message.chat.id,
-        text=prepare_to_game_msg,
-        reply_markup=set_markup(number=len(all_players), max_number=max_players)
+        text=f"Подготовка к игре: \n"
+             f"{message}",
+        reply_markup=set_markup(number=len(all_players), max_number=max_players),
+        parse_mode='markdown',
+        disable_web_page_preview=True
     )
 
 
-async def send_start_game_message(player: Player, group_id: int) -> None:
-    await bot.send_message(chat_id=player.id, text=player.send_info_about_player(), parse_mode="MARKDOWN",
-                           reply_markup=characteristics_of_player(player.characteristic_names, group_id))
+async def send_start_game_message(player: Player, group_id: int) -> int:
+    keyboard_chat: Message = await bot.send_message(chat_id=player.id, text=player.send_info_about_player(),
+                                                    parse_mode="MARKDOWN",
+                                                    reply_markup=characteristics_of_player(player.characteristic_names,
+                                                                                           group_id))
+    return keyboard_chat.message_id
 
 
-async def send_history_message(callback: CallbackQuery, state: FSMContext) -> None:
-    session: Session = await get_session(state=state)
-    shelter: Shelter = session.shelter
-    with open("Data/base_photo.gif", 'rb') as image_gif:
-        await bot.send_photo(
-            photo=BufferedInputFile(
+async def delete_prepare_message(callback: CallbackQuery):
+    await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+
+
+async def send_history_message(callback: CallbackQuery, shelter: Shelter) -> None:
+    random_path = generate_characteristic(array=gifs)
+    with open(random_path, 'rb') as image_gif:
+        await bot.send_animation(
+            animation=BufferedInputFile(
                 image_gif.read(),
-                filename="image from buffer.jpg"
+                filename="base_photo.gif"
             ),
+            width=500,
             chat_id=callback.message.chat.id,
             caption=f"<b>ПРЕДИСТОРИЯ:</b> \n"
                     f"{shelter.history['description']} \n\n"
