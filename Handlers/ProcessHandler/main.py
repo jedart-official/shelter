@@ -1,37 +1,38 @@
-from aiogram import Router
-from aiogram.filters import Command
-from aiogram.types import Message
-from Handlers.GameHandler.Conditions.conditions import is_player
-from Handlers.ProcessHandler.Methods.methods import create_session, clear_session
-from aiogram.fsm.context import FSMContext
+from aiogram import Router, types
+from Factories.MessageCallbackFactory import MessageCallbackFactory
+from Factories.VoiceCallbackFactory import VoiceCallbackFactory
+from Handlers.ProcessHandler.Messages.messages import send_edit_meeting_message
+from Handlers.ProcessHandler.Methods.methods import check_free_characteristics, find_kicked_player
 from Models.Session import Session
 from States.main import get_session
-from Utils.helpers import is_session
-from config import bot
+from Utils.conditions import is_current_player, is_current_user_keyboard, is_player
+from Utils.helpers import get_group_context, is_session
+from aiogram.fsm.context import FSMContext
 
-process_router = Router()
-
-
-@process_router.message(Command('start'))
-async def sign_up_the_user(message: Message) -> None:
-    await message.answer('Регистрация прошла успешно')
+game_router = Router()
 
 
-@process_router.message(Command('shelter'))
-async def start_game_handler(message: Message, state: FSMContext) -> None:
-    await create_session(message=message, state=state)
-
-
-@process_router.message(Command('end'))
-async def end_game_handler(message: Message, state: FSMContext) -> None:
-    if await is_session(state=state):
-        await clear_session(message=message)
-
-
-@process_router.message()
-async def block_unregister_players(message: Message, state: FSMContext) -> None:
+@game_router.callback_query(MessageCallbackFactory.filter())
+async def send_message(callback: types.CallbackQuery, callback_data: MessageCallbackFactory) -> None:
+    state: FSMContext = await get_group_context(callback_data.group_id)
     if await is_session(state=state):
         session: Session = await get_session(state=state)
-        user: int = message.from_user.id
-        if not is_player(session=session, voiced_player_id=user):
-            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        if is_current_player(callback=callback, session=session) and is_current_user_keyboard(
+                message_id=callback.message.message_id,
+                keywords=session.keyboards
+        ):
+            await check_free_characteristics(callback=callback, callback_data=callback_data, session=session)
+
+
+@game_router.callback_query(VoiceCallbackFactory.filter())
+async def give_voice(callback: types.CallbackQuery, callback_data: VoiceCallbackFactory, state: FSMContext) -> None:
+    if await is_session(state=state):
+        session: Session = await get_session(state=state)
+        voiced_user: int = callback.from_user.id
+        if is_player(session=session, voiced_player_id=voiced_user):
+            if voiced_user not in session.voiced_players:
+                if not session.add_voiced_players(player_id=voiced_user, from_player=callback_data.value):
+                    await find_kicked_player(message=callback.message, session=session)
+                    return
+                else:
+                    await send_edit_meeting_message(session=session, message_id=callback.message.message_id)

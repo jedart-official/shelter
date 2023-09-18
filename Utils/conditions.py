@@ -1,14 +1,19 @@
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
-from Models import Player
-from Models.Session import Session
+from aiogram.types import Message, CallbackQuery
+
+from Models import Player, Session
 from Models.Shelter import Shelter
 
 
+def is_unregistered_player(user_id, all_players: dict[int, Player]) -> bool:
+    return user_id not in all_players
 
+
+def is_full_party(all_players: dict, players_in_game: int) -> bool:
+    return len(all_players) == players_in_game
 
 
 def is_current_user_keyboard(message_id: int, keywords: list[int]):
+    print(keywords)
     return message_id in keywords
 
 
@@ -25,9 +30,9 @@ def is_finish(session: Session) -> bool:
 
 
 def is_free_characteristic(session: Session) -> bool | str:
-    opened: int = session.opened_characteristic
+    selected: int = len(session.selected_chars)
     important: int = session.important_open
-    return opened <= important
+    return selected == important
 
 
 def is_player(session: Session, voiced_player_id: int):

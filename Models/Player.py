@@ -1,6 +1,7 @@
 # MORE IMPORTS
+from aiogram.types import Message
 from Data.info import *
-from Utils.helpers import generate_characteristic
+from Utils.helpers import get_random_item_from_array
 import random
 
 
@@ -10,18 +11,19 @@ class Player:
         self.name: str = player_name
         self.nickname: str = player_nickname
         self.gender: str = gender[random.randint(0, 1)]
-        self.job: str = generate_characteristic(jobs)
+        self.job: str = get_random_item_from_array(jobs)
         self.old: int = random.randint(18, 80)
-        self.orientation: str = generate_characteristic(orintation)
-        self.body: str = generate_characteristic(body)
-        self.health: str = generate_characteristic(health)
-        self.hobby: str = generate_characteristic(hobby)
-        self.phobia: str = generate_characteristic(phobia)
-        self.character: str = generate_characteristic(character)
-        self.additional: str = generate_characteristic(additional_info)
-        self.bag: str = generate_characteristic(bag)
-        self.knowledge: str = generate_characteristic(knowledge)
+        self.orientation: str = get_random_item_from_array(orintation)
+        self.body: str = get_random_item_from_array(body)
+        self.health: str = get_random_item_from_array(health)
+        self.hobby: str = get_random_item_from_array(hobby)
+        self.phobia: str = get_random_item_from_array(phobia)
+        self.character: str = get_random_item_from_array(character)
+        self.additional: str = get_random_item_from_array(additional_info)
+        self.bag: str = get_random_item_from_array(bag)
+        self.knowledge: str = get_random_item_from_array(knowledge)
         self.characteristics: list = []
+        self.chars_message: str = ''
         self.characteristic_names: list = [
             "Обо мне", "Здоровье", "Хобби", "Фобия",
             "Характер", "Доп.информация", "Знание", "Багаж"
@@ -38,14 +40,14 @@ class Player:
 
     def set_characteristics(self):
         self.characteristics = [
-            f"🧒\t|\t*О человеке:*\n\n{self.create_person()}",
-            f"❤️\t|\t*Здоровье:*\n\n|\t *{self.health}*",
-            f"🎨\t|\t*Хобби:*\n\n|\t*{self.hobby}*",
-            f"👻\t|\t*Фобия:*\n\n|\t*{self.phobia}*",
-            f"😇\t|\t*Характер:*\n\n|\t*{self.character}*",
-            f"📝\t|\t*Доп.Информация:*\n\n|\t*{self.additional}*",
-            f"🧠\t|\t*Знание:*\n\n|\t*{self.knowledge}*",
-            f"👜\t|\t*Багаж:*\n\n|\t*{self.bag}*",
+            f"🧒\t|\t*О ЧЕЛОВЕКЕ:*\n{self.create_person()}",
+            f"❤️\t|\t*ЗДОРОВЬЕ:*\n|\t *{self.health}*",
+            f"🎨\t|\t*ХОББИ:*\n|\t*{self.hobby}*",
+            f"👻\t|\t*ФОБИЯ:*\n|\t*{self.phobia}*",
+            f"😇\t|\t*ХАРАКТЕР:*\n|\t*{self.character}*",
+            f"📝\t|\t*ДОП.ИНФОРМАЦИЯ:*\n|\t*{self.additional}*",
+            f"🧠\t|\t*ЗНАНИЕ:*\n|\t*{self.knowledge}*",
+            f"👜\t|\t*БАГАЖ:*\n|\t*{self.bag}*",
         ]
 
     def send_info_about_player(self):
@@ -60,3 +62,11 @@ class Player:
                          f"🧠\t|\t*ЗНАНИЕ:*\n_{self.knowledge}_\n\n" \
                          f"👜\t|\t*БАГАЖ:*\n_{self.bag}_\n"
         return message_answer
+
+
+def create_player(message: Message) -> Player:
+    return Player(
+        player_id=message.from_user.id,
+        player_name=message.from_user.first_name,
+        player_nickname=message.from_user.username
+    )

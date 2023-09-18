@@ -4,11 +4,10 @@ from Factories.NumberCallbackFactory import NumbersCallbackFactory
 from Factories.MessageCallbackFactory import MessageCallbackFactory
 from Factories.VoiceCallbackFactory import VoiceCallbackFactory
 from Models.Player import Player
-from Models.Session import Session
 
 
-def set_markup(number: int, max_number: int) -> InlineKeyboardMarkup:
-    start_btn = InlineKeyboardButton(text=f"Подготовка к игре {number}/{max_number}", callback_data='add_player')
+def set_markup(number: int, max_number: int, group_id: int) -> InlineKeyboardMarkup:
+    start_btn = InlineKeyboardButton(text=f"Подготовка к игре {number}/{max_number}", callback_data='add_player', url=f'https://t.me/shelter_is_bot?start={group_id}')
     start_markup = InlineKeyboardBuilder()
     start_markup.add(start_btn)
     return start_markup.as_markup()

@@ -1,9 +1,6 @@
-from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from Models.Session import Session
-
-memory_router = Router()
 
 
 class ActiveSession(StatesGroup):

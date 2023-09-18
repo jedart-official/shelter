@@ -1,7 +1,7 @@
 from random import randint
 
 from Data.info import disasters, shelter_info
-from Utils.helpers import generate_characteristic
+from Utils.helpers import get_random_item_from_array
 
 
 def set_voice_turn(players: int):
@@ -28,12 +28,12 @@ def set_shelter_info() -> dict:
     shelter_invertory: str = shelter_info['invertory']
     shelter_location: str = shelter_info['location']
     return {
-        'type': generate_characteristic(shelter_type),
-        'state': generate_characteristic(shelter_state),
-        'main_room': generate_characteristic(shelter_main_room),
-        'additional_room': generate_characteristic(shelter_additional_room),
-        'location': generate_characteristic(shelter_location),
-        'invertory': generate_characteristic(shelter_invertory),
+        'type': get_random_item_from_array(shelter_type),
+        'state': get_random_item_from_array(shelter_state),
+        'main_room': get_random_item_from_array(shelter_main_room),
+        'additional_room': get_random_item_from_array(shelter_additional_room),
+        'location': get_random_item_from_array(shelter_location),
+        'invertory': get_random_item_from_array(shelter_invertory),
     }
 
 
@@ -41,6 +41,6 @@ class Shelter:
     def __init__(self, max_players):
         self.players_in_shelter = set_players_in_shelter(max_players)
         self.voice_turn = set_voice_turn(max_players)
-        self.history = generate_characteristic(disasters)
+        self.history = get_random_item_from_array(disasters)
         self.live_time = set_time_to_live()
         self.shelter_info = set_shelter_info()
