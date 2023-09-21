@@ -1,8 +1,8 @@
+import sqlalchemy as db
 from sqlalchemy import Integer, \
     Column, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
-import sqlalchemy as db
 
 Base = declarative_base()
 engine = db.create_engine('sqlite:///shelter.db')

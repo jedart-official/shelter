@@ -1,12 +1,15 @@
 from aiogram import Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message
-from Database.methods import add_message_to_db
-from Handlers.PrepareHandler.Methods.methods import add_player
-from Handlers.StartHandler.Methods.methods import create_session, clear_session
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
+
+from Database.methods import add_message_to_db
+from Filters.ChatTypeFilter import ChatTypeFilter
+from Handlers.StartHandler.Messages.messages import send_end_game_message
+from Handlers.StartHandler.Methods.methods import create_session, add_player
 from Models.Session import Session
-from States.main import get_session
+from States.main import get_session, clear_session
 from Utils.conditions import is_unregistered_player, is_player
 from Utils.helpers import is_session, get_group_context
 from config import bot
@@ -14,7 +17,7 @@ from config import bot
 start_router = Router()
 
 
-@start_router.message(Command('start'), F.chat.type == "private")
+@start_router.message(Command('start'), ChatTypeFilter(ChatType.PRIVATE))
 async def sign_up_the_user(message: Message, command: CommandObject) -> None:
     try:
         state: FSMContext = await get_group_context(int(command.args))
@@ -28,7 +31,7 @@ async def sign_up_the_user(message: Message, command: CommandObject) -> None:
         await message.answer('Вы не выбрали сессию? Или возможно что-то пошло не так')
 
 
-@start_router.message(Command('shelter'), F.chat.type.in_({'supergroup', 'group'}))
+@start_router.message(Command('shelter'), ChatTypeFilter([ChatType.GROUP, ChatType.SUPERGROUP]))
 async def start_game_handler(message: Message, state: FSMContext) -> None:
     await create_session(message=message, state=state)
     await bot.delete_message(message.chat.id, message.message_id)
@@ -40,6 +43,7 @@ async def end_game_handler(message: Message, state: FSMContext) -> None:
         session: Session = await get_session(state=state)
         await add_message_to_db(chat_id=message.chat.id, message_id=message.message_id, session_id=session.db_id)
         await clear_session(message=message)
+        await send_end_game_message(message=message)
 
 
 @start_router.message()

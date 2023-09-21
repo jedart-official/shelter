@@ -1,8 +1,10 @@
 # MORE IMPORTS
+import random
+
 from aiogram.types import Message
+
 from Data.info import *
 from Utils.helpers import get_random_item_from_array
-import random
 
 
 class Player:

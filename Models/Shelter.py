@@ -44,3 +44,8 @@ class Shelter:
         self.history = get_random_item_from_array(disasters)
         self.live_time = set_time_to_live()
         self.shelter_info = set_shelter_info()
+
+    def clear_some_info_about_shelter(self):
+        self.shelter_info = {}
+        self.live_time = 0
+        self.history = ''

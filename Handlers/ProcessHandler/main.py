@@ -1,13 +1,14 @@
 from aiogram import Router, types
+from aiogram.fsm.context import FSMContext
+
 from Factories.MessageCallbackFactory import MessageCallbackFactory
 from Factories.VoiceCallbackFactory import VoiceCallbackFactory
 from Handlers.ProcessHandler.Messages.messages import send_edit_meeting_message
-from Handlers.ProcessHandler.Methods.methods import check_free_characteristics, find_kicked_player
+from Handlers.ProcessHandler.Methods.methods import check_free_characteristics, send_kicked_player
 from Models.Session import Session
 from States.main import get_session
 from Utils.conditions import is_current_player, is_current_user_keyboard, is_player
 from Utils.helpers import get_group_context, is_session
-from aiogram.fsm.context import FSMContext
 
 game_router = Router()
 
@@ -32,7 +33,7 @@ async def give_voice(callback: types.CallbackQuery, callback_data: VoiceCallback
         if is_player(session=session, voiced_player_id=voiced_user):
             if voiced_user not in session.voiced_players:
                 if not session.add_voiced_players(player_id=voiced_user, from_player=callback_data.value):
-                    await find_kicked_player(message=callback.message, session=session)
+                    await send_kicked_player(message=callback.message, session=session)
                     return
                 else:
                     await send_edit_meeting_message(session=session, message_id=callback.message.message_id)

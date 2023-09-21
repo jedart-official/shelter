@@ -1,7 +1,7 @@
-from aiogram import Bot
-from aiogram.enums import ParseMode
 from os import getenv
 
+from aiogram import Bot
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 TOKEN = getenv('TOKEN')

@@ -20,7 +20,9 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files />
+    <open-files>
+      <object connection-id="9b009eb6-9953-4628-8cc2-a43222a89b75" object-ref="schemas/shelter/tables/sessions" />
+    </open-files>
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-actions connection-id="9b009eb6-9953-4628-8cc2-a43222a89b75" dataset="shelter.messages" active-filter-id="EMPTY_FILTER">

@@ -4,6 +4,7 @@ import random
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
+
 from Database.main import session_db, MessageDB, SessionDB
 from config import bot, storage
 
@@ -61,9 +62,6 @@ async def clear_group_messages(chat_id: int, session_id: int) -> None:
     else:
         bot.send_message(chat_id=chat_id,
                          text='Для праавильной работы бота, ему требуются права администратора в группе')
-
-
-
 
 
 
